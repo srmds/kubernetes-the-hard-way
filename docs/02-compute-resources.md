@@ -193,3 +193,5 @@ $ vagrant destroy <vm>
 $ rmdir "<path-to-vm-folder>\kubernetes-ha-worker-2"
 $ vagrant up
 ```
+
+Next: [Installing the Client Tools](03-client-tools.md)
