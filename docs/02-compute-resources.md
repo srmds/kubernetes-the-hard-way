@@ -47,12 +47,6 @@ This does the below:
     > sysctl net.bridge.bridge-nf-call-iptables=1
 
 
-_Note: in order to stop / shutdown the nodes one can use the vagrant halt command:_
-
-```
-$ vagrant halt
-```
-
 ## SSH to the nodes
 
 There are two ways to SSH into the nodes:
@@ -162,13 +156,21 @@ Next step is to:
 
 ## Troubleshooting Tips
 
-If any of the VMs failed to provision, or is not configured correct, delete the vm using the command:
+If any of the VMs failed to provision, or is not configured correct, stop and or delete VM's using the following command:
+
+Stop VM's:
+
+```shell
+$ vagrant halt
+```
+
+Delete a specific VM:
 
 ```shell
 $ vagrant destroy <vm>
 ```
 
-Then reprovision. Only the missing VMs will be re-provisioned
+Then reprovision. Only the missing VMs will be re-provisioned:
 
 ```shell
 $ vagrant up
