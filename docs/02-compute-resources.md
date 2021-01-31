@@ -2,18 +2,23 @@
 
 Note: You must have VirtualBox and Vagrant configured at this point
 
-Download this github repository and cd into the vagrant folder
+Clone the repository:
 
-`git clone https://github.com/mmumshad/kubernetes-the-hard-way.git`
+```shell
+$ git clone https://github.com/mmumshad/kubernetes-the-hard-way.git
+```
 
-CD into vagrant directory
+Navigate into the _vagrant_ directory:
 
-`cd kubernetes-the-hard-way\vagrant`
+```shell
+$ cd kubernetes-the-hard-way\vagrant
+```
 
-Run Vagrant up
+Start the master-, worker nodes and loadbalancer
 
-`vagrant up`
-
+```shell
+$ vagrant up
+```
 
 This does the below:
 
@@ -36,10 +41,17 @@ This does the below:
     > DNS: 8.8.8.8
 
 - Install's Docker on Worker nodes
+
 - Runs the below command on all nodes to allow for network forwarding in IP Tables.
   This is required for kubernetes networking to function correctly.
     > sysctl net.bridge.bridge-nf-call-iptables=1
 
+
+_Note: in order to stop / shutdown the nodes one can use the vagrant halt command:_
+
+```
+$ vagrant halt
+```
 
 ## SSH to the nodes
 
@@ -65,35 +77,117 @@ Vagrant generates a private key for each of these VMs. It is placed under the .v
 ## Verify Environment
 
 - Ensure all VMs are up
-- Ensure VMs are assigned the above IP addresses
-- Ensure you can SSH into these VMs using the IP and private keys
-- Ensure the VMs can ping each other
-- Ensure the worker nodes have Docker installed on them. Version: 18.06
+
+```shell
+$ vagrant global-status
+```
+
+Ouput example:
+
+```
+id       name         provider   state   directory                                                                    
+---------------------------------------------------------------------------
+2cf2393  master-1     virtualbox running ../kubernetes-the-hard-way/vagrant
+b5d9c70  master-2     virtualbox running ../kubernetes-the-hard-way/vagrant
+ea8d587  loadbalancer virtualbox running ../kubernetes-the-hard-way/vagrant
+eaef426  worker-1     virtualbox running ../kubernetes-the-hard-way/vagrant
+71f6280  worker-2     virtualbox running ../kubernetes-the-hard-way/vagrant
+```
+
+Ensure that `masters`, `workers` and `loadbalancer` are in _running_ state.
+
+Next step is to:
+
+- ensure the VMs are assigned the above IP provided addresses
+- ensure SSH access into the VMs using the IP and private keys is enabled
+- ensure the VMs can ping each other
+- ensure the worker nodes have Docker installed on them. Version: 18.06
   > command `sudo docker version`
+
+  Manually SSH into each node and determine it's assigned IP, and make sure that it matches the IP listed in earlier provided IP table.
+
+  Start with the _master-1_ node:
+
+  ```shell
+  $ vagrant ssh master-1    # ssh into master-1 node
+  $ ip a                    # should output an interface with linked ip: 192.168.5.11
+  $ ping 192.168.5.12       # check if master-1 can ping master-2
+  $ ping 192.168.5.21       # check if master-1 can ping worker-1
+  $ ping 192.168.5.22       # check if master-1 can ping worker-2
+  ```
+
+  Output example:
+
+  ```shell
+  $ vagrant ssh master-1                                                # ssh into master-1 node
+
+  Welcome to Ubuntu 18.04.5 LTS (GNU/Linux 4.15.0-135-generic x86_64)
+  ...
+
+  vagrant@master-1:~$ ip a                                              # list ip's
+      ...
+  3: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 ...
+      ...
+      inet 192.168.5.11/24 brd 192.168.5.255 scope global enp0s8        # here you see the IP of master-1 node
+
+        ...
+
+  vagrant@master-1:~$ ping 192.168.5.12                                 # ping master-2     
+  PING 192.168.5.12 (192.168.5.12) 56(84) bytes of data.
+  64 bytes from 192.168.5.12: icmp_seq=1 ttl=64 time=0.460 ms
+  64 bytes from 192.168.5.12: icmp_seq=2 ttl=64 time=0.344 ms
+  ^C
+  --- 192.168.5.12 ping statistics ---
+  2 packets transmitted, 2 received, 0% packet loss, time 1062ms
+  rtt min/avg/max/mdev = 0.344/0.402/0.460/0.058 ms
+
+  vagrant@master-1:~$ ping 192.168.5.21                                 # ping worker-1
+  PING 192.168.5.21 (192.168.5.21) 56(84) bytes of data.
+  64 bytes from 192.168.5.21: icmp_seq=1 ttl=64 time=0.449 ms
+  64 bytes from 192.168.5.21: icmp_seq=2 ttl=64 time=0.320 ms
+  ^C
+  --- 192.168.5.21 ping statistics ---
+  2 packets transmitted, 2 received, 0% packet loss, time 1037ms
+  rtt min/avg/max/mdev = 0.320/0.384/0.449/0.067 ms
+
+  vagrant@master-1:~$ ping 192.168.5.22                                 # ping worker-2
+  PING 192.168.5.22 (192.168.5.22) 56(84) bytes of data.
+  64 bytes from 192.168.5.22: icmp_seq=1 ttl=64 time=0.465 ms
+  64 bytes from 192.168.5.22: icmp_seq=2 ttl=64 time=0.316 ms
+  ^C
+  --- 192.168.5.22 ping statistics ---
+  2 packets transmitted, 2 received, 0% packet loss, time 1279ms
+  rtt min/avg/max/mdev = 0.316/0.390/0.465/0.077 ms
+  ```
 
 ## Troubleshooting Tips
 
 If any of the VMs failed to provision, or is not configured correct, delete the vm using the command:
 
-`vagrant destroy <vm>`
+```shell
+$ vagrant destroy <vm>
+```
 
 Then reprovision. Only the missing VMs will be re-provisioned
 
-`vagrant up`
-
+```shell
+$ vagrant up
+```
 
 Sometimes the delete does not delete the folder created for the vm and throws the below error.
 
 VirtualBox error:
 
-    VBoxManage.exe: error: Could not rename the directory 'D:\VirtualBox VMs\ubuntu-bionic-18.04-cloudimg-20190122_1552891552601_76806' to 'D:\VirtualBox VMs\kubernetes-ha-worker-2' to save the settings file (VERR_ALREADY_EXISTS)
-    VBoxManage.exe: error: Details: code E_FAIL (0x80004005), component SessionMachine, interface IMachine, callee IUnknown
-    VBoxManage.exe: error: Context: "SaveSettings()" at line 3105 of file VBoxManageModifyVM.cpp
+```shell
+VBoxManage.exe: error: Could not rename the directory 'D:\VirtualBox VMs\ubuntu-bionic-18.04-cloudimg-20190122_1552891552601_76806' to 'D:\VirtualBox VMs\kubernetes-ha-worker-2' to save the settings file (VERR_ALREADY_EXISTS)
+VBoxManage.exe: error: Details: code E_FAIL (0x80004005), component SessionMachine, interface IMachine, callee IUnknown
+VBoxManage.exe: error: Context: "SaveSettings()" at line 3105 of file VBoxManageModifyVM.cpp
+```
 
 In such cases delete the VM, then delete the VM folder and then re-provision
 
-`vagrant destroy <vm>`
-
-`rmdir "<path-to-vm-folder>\kubernetes-ha-worker-2"`
-
-`vagrant up`
+```shell
+$ vagrant destroy <vm>
+$ rmdir "<path-to-vm-folder>\kubernetes-ha-worker-2"
+$ vagrant up
+```
